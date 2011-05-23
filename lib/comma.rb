@@ -28,13 +28,14 @@ require 'comma/extractors'
 require 'comma/generator'
 require 'comma/array'
 require 'comma/object'
-#require 'comma/render_as_csv'
+require 'comma/render_as_csv'
 
 if defined?(ActiveRecord)
   require 'comma/named_scope'
   require 'comma/association_proxy'
 end
 
-#if defined?(ActionController)
-#  ActionController::Base.send :include, RenderAsCSV
-#end
+if defined?(ActionController)
+  ActionController::Base.send :include, RenderAsCSV
+end
+

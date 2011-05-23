@@ -9,6 +9,7 @@ module RenderAsCSV
     content  = options.delete(:csv)
     style    = options.delete(:style) || :default
     filename = options.delete(:filename)
+    csv_opts = options.delete(:csv_opts)
 
     headers.merge!(
       'Content-Transfer-Encoding' => 'binary',
@@ -22,7 +23,8 @@ module RenderAsCSV
 
     render_stream :status => 200,
                   :content => Array(content),
-                  :style => style
+                  :style => style,
+                  :csv_opts => csv_opts || Hash.new
   end
 
   protected
@@ -31,12 +33,23 @@ module RenderAsCSV
     status  = options[:status]
     content = options[:content]
     style   = options[:style]
+    csv_opts = options[:csv_opts]
 
-    render :status => status, :text => Proc.new { |response, output|
-      output.write FasterCSV.generate_line(content.first.to_comma_headers(style))
-      content.each { |line| output.write FasterCSV.generate_line(line.to_comma(style)) }
-    }
+     # If Rails 2.x
+    if defined? Rails and (Rails.version.split('.').map(&:to_i) <=> [2,3,5]) < 0
+      render :status => status, :text => Proc.new { |response, output|
+        output.write FasterCSV.generate_line(content.first.to_comma_headers(style), csv_opts)
+        content.each { |line| output.write FasterCSV.generate_line(line.to_comma(style), csv_opts) }
+      }
+    else # If Rails 3.x
+      self.status = status
+      self.response_body = proc { |response, output|
+        output.write FasterCSV.generate_line(content.first.to_comma_headers(style), csv_opts)
+        content.each { |line| output.write FasterCSV.generate_line(line.to_comma(style), csv_opts) }
+      }
+    end
   end
 end
 
 #credit : http://ramblingsonrails.com/download-a-large-amount-of-data-in-csv-from-rails
+
