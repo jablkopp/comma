@@ -177,7 +177,7 @@ When used with Rails (ie. add 'comma' as a gem dependency), Comma automatically 
 
    def index
      respond_to do |format|
-       format.csv { render :csv => Book.limited(50) }
+       format.csv { render :csv => Book.limited(50), :csv_opts => { :col_sep => "\t" }, :filename = "export.csv" }
      end
    end
 
